@@ -81,12 +81,13 @@ cd secure-event-logging-search
    ```sql
    CREATE DATABASE eventdb;
    ```
-3. Update credentials in `src/main/resources/application.properties`:
-   ```properties
-   spring.datasource.url=jdbc:postgresql://localhost:5432/eventdb
-   spring.datasource.username=postgres
-   spring.datasource.password=your_password
-   ```
+3. Set environment variables for database credentials (recommended for security):
+   - `DB_USERNAME`: PostgreSQL username (default: `postgres`)
+   - `DB_PASSWORD`: PostgreSQL password (default: `password`)
+   
+   **Via IntelliJ IDEA**: Run > Edit Configurations > Environment variables > Add `DB_USERNAME` and `DB_PASSWORD`
+   
+   The `application.properties` file uses `${DB_USERNAME:postgres}` and `${DB_PASSWORD:password}` syntax, which will use these environment variables or fall back to defaults if not set.
 
 ### Step 3: Build the Project
 Using Maven:
@@ -159,10 +160,20 @@ OK
 ### application.properties
 Key configurations:
 - `spring.datasource.url`: PostgreSQL connection URL
-- `spring.datasource.username`: PostgreSQL username
-- `spring.datasource.password`: PostgreSQL password
+- `spring.datasource.username`: Uses `${DB_USERNAME:postgres}` (environment variable or default)
+- `spring.datasource.password`: Uses `${DB_PASSWORD:password}` (environment variable or default)
 - `spring.jpa.hibernate.ddl-auto`: Auto-generate/update database schema (`update` for development)
 - `server.port`: Application port (default: 8080)
+
+### Environment Variables
+For security, database credentials should be set as environment variables rather than hardcoded:
+- `DB_USERNAME`: PostgreSQL username (recommended: set via IDE run configuration)
+- `DB_PASSWORD`: PostgreSQL password (recommended: set via IDE run configuration)
+
+**To set in IntelliJ IDEA**:
+1. Run > Edit Configurations > SecureEventLoggingApplication
+2. Environment variables field > Add the variables
+3. Click OK to save
 
 ## Future Sprints (Overview)
 
