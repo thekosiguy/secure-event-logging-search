@@ -1,6 +1,6 @@
 # Secure Event Logging & Search Platform
 
-A secure event logging and search platform built with Java and Spring Boot. Enables organizations to log, store, retrieve, and search events with security, validation, and search capabilities.
+A secure event logging and search platform built with Java and Spring Boot. Enables organisations to securely log, store, retrieve, and search events with validation and capabilities for searching.
 
 ## Tech Stack
 
