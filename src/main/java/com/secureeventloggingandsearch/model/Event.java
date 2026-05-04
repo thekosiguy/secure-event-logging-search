@@ -1,6 +1,10 @@
 package com.secureeventloggingandsearch.model;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import io.hypersistence.utils.hibernate.type.json.JsonBinaryType;
 import jakarta.persistence.*;
+import org.hibernate.annotations.Type;
+
 import java.time.Instant;
 import java.util.UUID;
 
@@ -19,43 +23,26 @@ public class Event {
     @Column(name = "timestamp", nullable = false)
     private Instant timestamp;
 
-    @Column(name = "payload", columnDefinition = "TEXT")
-    private String payload;
+    @Type(JsonBinaryType.class)
+    @Column(name = "payload", columnDefinition = "jsonb")
+    private JsonNode payload;
 
-    // Default constructor required by JPA
     public Event() {}
 
-    public Event(String type, Instant timestamp, String payload) {
+    public Event(String type, Instant timestamp, JsonNode payload) {
         this.type = type;
         this.timestamp = timestamp;
         this.payload = payload;
     }
 
-    public UUID getId() {
-        return id;
-    }
+    public UUID getId() { return id; }
 
-    public String getType() {
-        return type;
-    }
+    public String getType() { return type; }
+    public void setType(String type) { this.type = type; }
 
-    public void setType(String type) {
-        this.type = type;
-    }
+    public Instant getTimestamp() { return timestamp; }
+    public void setTimestamp(Instant timestamp) { this.timestamp = timestamp; }
 
-    public Instant getTimestamp() {
-        return timestamp;
-    }
-
-    public void setTimestamp(Instant timestamp) {
-        this.timestamp = timestamp;
-    }
-
-    public String getPayload() {
-        return payload;
-    }
-
-    public void setPayload(String payload) {
-        this.payload = payload;
-    }
+    public JsonNode getPayload() { return payload; }
+    public void setPayload(JsonNode payload) { this.payload = payload; }
 }
