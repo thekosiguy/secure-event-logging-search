@@ -1,225 +1,125 @@
 # Secure Event Logging & Search Platform
 
-A comprehensive, secure event logging and search platform built with modern Java technologies. This platform enables organizations to log, store, retrieve, and search events with enhanced security, validation, and search capabilities.
-
-## Project Overview
-
-This project is being developed in **12 sprints**, with each sprint building upon the previous foundation to deliver a production-ready event logging system.
-
-### Current Status: Sprint 1 - Project Foundation ✅
-
-**Goal**: Clean and professional project setup with foundational architecture.
+A secure event logging and search platform built with Java and Spring Boot. Enables organizations to log, store, retrieve, and search events with security, validation, and search capabilities.
 
 ## Tech Stack
 
-- **Backend Framework**: Spring Boot 3.x
-- **Language**: Java 17+
-- **Database**: PostgreSQL
+- **Framework**: Spring Boot 3.2.0
+- **Language**: Java 17+ (tested on JDK 25)
+- **Database**: PostgreSQL 18
 - **ORM**: Hibernate (JPA)
-- **Build Tool**: Maven
-- **Version Control**: Git
+- **Build Tool**: Maven 3.9.x
+- **IDE**: Kiro
 
 ## Project Structure
 
 ```
 src/
-├── main/
-│   ├── java/
-│   │   └── com/secureeventloggingandsearch/
-│   │       ├── SecureEventLoggingApplication.java  # Main Spring Boot entry point
-│   │       ├── controller/                          # REST API controllers
-│   │       │   └── HealthController.java
-│   │       ├── service/                             # Business logic (placeholder)
-│   │       ├── repository/                          # Data access layer (placeholder)
-│   │       ├── model/                               # Entity models (placeholder)
-│   │       └── dto/                                 # Data Transfer Objects (placeholder)
-│   └── resources/
-│       └── application.properties                   # Configuration file
-└── pom.xml                                          # Maven dependencies
+└── main/
+    ├── java/com/secureeventloggingandsearch/
+    │   ├── SecureEventLoggingApplication.java  # Entry point
+    │   ├── controller/                          # REST controllers
+    │   ├── service/                             # Business logic
+    │   ├── repository/                          # Data access layer
+    │   ├── model/                               # JPA entities
+    │   └── dto/                                 # Request/response objects
+    └── resources/
+        └── application.properties              # App configuration
 ```
 
-## Features - Sprint 1
-
-### Implemented
-- ✅ Clean Spring Boot project setup with Maven
-- ✅ PostgreSQL database configuration (via `application.properties`)
-- ✅ Basic REST API endpoint: `GET /health`
-- ✅ Professional package structure (controller, service, repository, model, dto)
-- ✅ JPA/Hibernate integration
-- ✅ Proper HTTP responses with Spring's `ResponseEntity`
-
-### Placeholders for Future Sprints
-- 🔄 Event entity model (id, type, timestamp, payload)
-- 🔄 Event repository and CRUD operations
-- 🔄 Event service layer
-- 🔄 REST API endpoints: `POST /events`, `GET /events`, `GET /events/{id}`
-- 🔄 Input validation and error handling
-- 🔄 Search functionality
-- 🔄 Security features
-
-## Setup Instructions
+## Setup
 
 ### Prerequisites
-- **JDK 17+** (tested with Eclipse Temurin JDK 25)
-  - Download: https://adoptium.net/temurin/releases/
-  - Set `JAVA_HOME` environment variable
-- **Maven** (optional if using IntelliJ IDEA Maven plugin)
-  - Download: https://maven.apache.org/download.cgi
-- **PostgreSQL** (tested with PostgreSQL 15+)
-  - Download: https://www.postgresql.org/download/
-  - Ensure service is running
+- JDK 17+ — [Eclipse Temurin](https://adoptium.net/temurin/releases/)
+- Maven 3.9.x — [Download](https://maven.apache.org/download.cgi)
+- PostgreSQL 18 — [Download](https://www.postgresql.org/download/)
 
-### Step 1: Clone the Repository
-```bash
-git clone https://github.com/yourusername/secure-event-logging-search.git
-cd secure-event-logging-search
+### Environment Variables
+Set these in your system environment variables (`sysdm.cpl`):
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `DB_USERNAME` | PostgreSQL username | `postgres` |
+| `DB_PASSWORD` | PostgreSQL password | `postgres` |
+
+### Database Setup
+```sql
+CREATE DATABASE eventdb;
 ```
 
-### Step 2: Configure Database
-1. Ensure PostgreSQL is running
-2. Create a database:
-   ```sql
-   CREATE DATABASE eventdb;
-   ```
-3. Set environment variables for database credentials (recommended for security):
-   - `DB_USERNAME`: PostgreSQL username (default: `postgres`)
-   - `DB_PASSWORD`: PostgreSQL password (default: `password`)
-   
-   **Via IntelliJ IDEA**: Run > Edit Configurations > Environment variables > Add `DB_USERNAME` and `DB_PASSWORD`
-   
-   The `application.properties` file uses `${DB_USERNAME:postgres}` and `${DB_PASSWORD:password}` syntax, which will use these environment variables or fall back to defaults if not set.
-
-### Step 3: Build the Project
-Using Maven:
-```bash
-mvn clean install
-```
-
-Or using IntelliJ IDEA Maven plugin:
-1. Open the Maven tool window
-2. Right-click Lifecycle > `clean`
-3. Right-click Lifecycle > `install`
-
-### Step 4: Run the Application
-Using Maven:
+### Run
 ```bash
 mvn spring-boot:run
 ```
-
-Or from IntelliJ IDEA:
-1. Open `SecureEventLoggingApplication.java`
-2. Right-click > `Run 'SecureEventLoggingApplication'`
-
-The application will start on `http://localhost:8080`
+App starts on `http://localhost:8080`
 
 ## API Endpoints
 
-### Sprint 1 - Current
+### Active
 
 | Method | Endpoint | Description | Status |
 |--------|----------|-------------|--------|
-| GET | `/health` | Health check endpoint | ✅ Active |
+| GET | `/api/v1/health` | Health check | ✅ Sprint 1 |
+| POST | `/api/v1/events` | Create a new event | ✅ Sprint 2 |
+| GET | `/api/v1/events` | Retrieve all events | ✅ Sprint 2 |
 
-**Example Request**:
+### Planned
+
+| Method | Endpoint | Description | Sprint |
+|--------|----------|-------------|--------|
+| GET | `/api/v1/events/{id}` | Get event by ID | 3 |
+| GET | `/api/v1/events/search` | Search events | 5-6 |
+
+### Example
+
+**POST /api/v1/events**
 ```bash
-curl http://localhost:8080/health
+curl -X POST http://localhost:8080/api/v1/events \
+  -H "Content-Type: application/json" \
+  -d "{\"type\":\"LOGIN\",\"payload\":\"{\\\"user\\\":\\\"john\\\"}\"}"
 ```
 
-**Example Response**:
+Response `201 Created`:
+```json
+{
+  "id": "550e8400-e29b-41d4-a716-446655440000",
+  "type": "LOGIN",
+  "timestamp": "2026-05-04T10:28:00Z",
+  "payload": "{\"user\":\"john\"}"
+}
 ```
-OK
+
+**GET /api/v1/events**
+```bash
+curl http://localhost:8080/api/v1/events
 ```
 
-### Future Endpoints (Planned)
+## Event Entity
 
-| Method | Endpoint | Description | Status |
-|--------|----------|-------------|--------|
-| POST | `/events` | Create a new event | 🔄 Sprint 2-3 |
-| GET | `/events` | Retrieve all events (with pagination/filtering) | 🔄 Sprint 3-4 |
-| GET | `/events/{id}` | Retrieve a specific event by ID | 🔄 Sprint 2-3 |
-| PUT | `/events/{id}` | Update an event | 🔄 Sprint 4 |
-| DELETE | `/events/{id}` | Delete an event | 🔄 Sprint 4 |
-| GET | `/events/search` | Search events with advanced filters | 🔄 Sprint 5-6 |
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | UUID | Auto-generated unique identifier |
+| `type` | String | Event type (e.g. LOGIN, LOGOUT) |
+| `timestamp` | Instant | Event time (defaults to now if not provided) |
+| `payload` | String (TEXT) | JSON payload |
 
-## Development Workflow
+## Sprint Progress
 
-### Creating a New Feature
-1. Create a branch for your feature: `git checkout -b feature/feature-name`
-2. Make your changes
-3. Commit with a meaningful message: `git commit -m "Feature: description"`
-4. Push to GitHub: `git push origin feature/feature-name`
-5. Create a Pull Request
-
-### Building and Testing
-- Clean build: `mvn clean install`
-- Run tests: `mvn test` (tests will be added in future sprints)
-- Check code quality: `mvn checkstyle:check` (to be configured)
-
-## Configuration
-
-### application.properties
-Key configurations:
-- `spring.datasource.url`: PostgreSQL connection URL
-- `spring.datasource.username`: Uses `${DB_USERNAME:postgres}` (environment variable or default)
-- `spring.datasource.password`: Uses `${DB_PASSWORD:password}` (environment variable or default)
-- `spring.jpa.hibernate.ddl-auto`: Auto-generate/update database schema (`update` for development)
-- `server.port`: Application port (default: 8080)
-
-### Environment Variables
-For security, database credentials should be set as environment variables rather than hardcoded:
-- `DB_USERNAME`: PostgreSQL username (recommended: set via IDE run configuration)
-- `DB_PASSWORD`: PostgreSQL password (recommended: set via IDE run configuration)
-
-**To set in IntelliJ IDEA**:
-1. Run > Edit Configurations > SecureEventLoggingApplication
-2. Environment variables field > Add the variables
-3. Click OK to save
-
-## Future Sprints (Overview)
-
-1. **Sprint 1**: Project Foundation ✅
-2. **Sprint 2**: Event Entity & Basic CRUD
-3. **Sprint 3**: REST API Endpoints (POST, GET)
-4. **Sprint 4**: Input Validation & Error Handling
-5. **Sprint 5**: Event Search Functionality
-6. **Sprint 6**: Advanced Filtering & Pagination
-7. **Sprint 7**: Security Features (Authentication/Authorization)
-8. **Sprint 8**: Audit Logging
-9. **Sprint 9**: Performance Optimization
-10. **Sprint 10**: Integration Testing
-11. **Sprint 11**: Documentation & API Documentation (Swagger)
-12. **Sprint 12**: Deployment & Production Readiness
-
-## Troubleshooting
-
-### Issue: "PostgreSQL connection refused"
-- **Solution**: Ensure PostgreSQL service is running and credentials are correct in `application.properties`
-
-### Issue: "JDK version not supported"
-- **Solution**: Ensure you have JDK 17+ installed and `JAVA_HOME` is set correctly
-
-### Issue: "Maven not recognized"
-- **Solution**: Add Maven bin directory to your system PATH or use IntelliJ IDEA's Maven plugin
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes and commit
-4. Push to the branch
-5. Open a Pull Request
-
-## License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
-
-## Contact & Support
-
-For questions or issues, please open an issue on GitHub.
+| Sprint | Goal | Status |
+|--------|------|--------|
+| 1 | Project Foundation | ✅ Done |
+| 2 | Event Entity & Basic CRUD API | ✅ Done |
+| 3 | GET /events/{id} & Error Handling | 🔄 Upcoming |
+| 4 | Input Validation | 🔄 Upcoming |
+| 5 | Event Search | 🔄 Upcoming |
+| 6 | Advanced Filtering & Pagination | 🔄 Upcoming |
+| 7 | Security (Auth/Authorization) | 🔄 Upcoming |
+| 8 | Audit Logging | 🔄 Upcoming |
+| 9 | Performance Optimization | 🔄 Upcoming |
+| 10 | Integration Testing | 🔄 Upcoming |
+| 11 | API Documentation (Swagger) | 🔄 Upcoming |
+| 12 | Deployment & Production Readiness | 🔄 Upcoming |
 
 ---
 
-**Last Updated**: April 22, 2026  
-**Sprint**: 1 (Project Foundation)  
-**Version**: 0.1.0
-
+**Version**: 0.2.0 | **Last Updated**: May 4, 2026

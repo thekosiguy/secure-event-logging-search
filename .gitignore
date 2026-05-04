@@ -32,3 +32,9 @@ bin/
 
 ### Maven ###
 target/
+
+### IntelliJ IDEA Module Files ###
+*.iml
+
+### AI Prompts ###
+ai/copilot/prompts/
