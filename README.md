@@ -1,13 +1,13 @@
 # Secure Event Logging & Search Platform
 
-A secure event logging and search platform built with Java and Spring Boot. Enables organisations to securely log, store, retrieve, and search events with validation and capabilities for searching.
+A secure event logging and search platform built with Java and Spring Boot. Enables organizations to log, store, retrieve, and search events with security, validation, and search capabilities.
 
 ## Tech Stack
 
 - **Framework**: Spring Boot 3.2.0
 - **Language**: Java 17+ (tested on JDK 25)
 - **Database**: PostgreSQL 18
-- **ORM**: Hibernate (JPA)
+- **ORM**: Hibernate (JPA) with hypersistence-utils for jsonb support
 - **Build Tool**: Maven 3.9.x
 - **IDE**: Kiro
 
@@ -19,10 +19,11 @@ src/
     ├── java/com/secureeventloggingandsearch/
     │   ├── SecureEventLoggingApplication.java  # Entry point
     │   ├── controller/                          # REST controllers
-    │   ├── service/                             # Business logic
+    │   ├── service/                             # Business logic + SLF4J logging
     │   ├── repository/                          # Data access layer
     │   ├── model/                               # JPA entities
-    │   └── dto/                                 # Request/response objects
+    │   ├── dto/                                 # Request/response/error objects
+    │   └── exception/                           # Global exception handler + custom exceptions
     └── resources/
         └── application.properties              # App configuration
 ```
@@ -35,12 +36,12 @@ src/
 - PostgreSQL 18 — [Download](https://www.postgresql.org/download/)
 
 ### Environment Variables
-Set these in your system environment variables (`sysdm.cpl`):
+Set these via `sysdm.cpl` → Advanced → Environment Variables:
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `DB_USERNAME` | PostgreSQL username | `postgres` |
-| `DB_PASSWORD` | PostgreSQL password | `postgres` |
+| Variable | Description |
+|----------|-------------|
+| `DB_USERNAME` | PostgreSQL username (e.g. `postgres`) |
+| `DB_PASSWORD` | PostgreSQL password |
 
 ### Database Setup
 ```sql
@@ -61,22 +62,22 @@ App starts on `http://localhost:8080`
 |--------|----------|-------------|--------|
 | GET | `/api/v1/health` | Health check | ✅ Sprint 1 |
 | POST | `/api/v1/events` | Create a new event | ✅ Sprint 2 |
-| GET | `/api/v1/events` | Retrieve all events | ✅ Sprint 2 |
+| GET | `/api/v1/events` | Retrieve all events (paginated) | ✅ Sprint 2 |
+| GET | `/api/v1/events/{id}` | Retrieve event by ID | ✅ Sprint 2 |
 
 ### Planned
 
 | Method | Endpoint | Description | Sprint |
 |--------|----------|-------------|--------|
-| GET | `/api/v1/events/{id}` | Get event by ID | 3 |
-| GET | `/api/v1/events/search` | Search events | 5-6 |
+| GET | `/api/v1/events/search` | Search events by filters | 5-6 |
 
-### Example
+### Examples
 
 **POST /api/v1/events**
 ```bash
 curl -X POST http://localhost:8080/api/v1/events \
   -H "Content-Type: application/json" \
-  -d "{\"type\":\"LOGIN\",\"payload\":\"{\\\"user\\\":\\\"john\\\"}\"}"
+  -d "{\"type\":\"LOGIN\",\"payload\":{\"user\":\"john\",\"ip\":\"192.168.1.1\"}}"
 ```
 
 Response `201 Created`:
@@ -85,13 +86,30 @@ Response `201 Created`:
   "id": "550e8400-e29b-41d4-a716-446655440000",
   "type": "LOGIN",
   "timestamp": "2026-05-04T10:28:00Z",
-  "payload": "{\"user\":\"john\"}"
+  "payload": { "user": "john", "ip": "192.168.1.1" }
 }
 ```
 
-**GET /api/v1/events**
+**GET /api/v1/events?page=0&size=10**
 ```bash
-curl http://localhost:8080/api/v1/events
+curl http://localhost:8080/api/v1/events?page=0&size=10
+```
+
+**GET /api/v1/events/{id}**
+```bash
+curl http://localhost:8080/api/v1/events/550e8400-e29b-41d4-a716-446655440000
+```
+
+### Error Responses
+All errors return a structured JSON body instead of Spring's default error page:
+```json
+{
+  "status": 400,
+  "error": "Validation Failed",
+  "message": "One or more fields are invalid",
+  "timestamp": "2026-05-04T10:28:00Z",
+  "details": ["type: must not be blank"]
+}
 ```
 
 ## Event Entity
@@ -99,26 +117,31 @@ curl http://localhost:8080/api/v1/events
 | Field | Type | Description |
 |-------|------|-------------|
 | `id` | UUID | Auto-generated unique identifier |
-| `type` | String | Event type (e.g. LOGIN, LOGOUT) |
-| `timestamp` | Instant | Event time (defaults to now if not provided) |
-| `payload` | String (TEXT) | JSON payload |
+| `type` | String | Event type (e.g. LOGIN, LOGOUT) — required |
+| `timestamp` | Instant | Event time — defaults to now if not provided |
+| `payload` | jsonb | Structured JSON payload — required |
+
+## Validation Rules
+
+| Field | Rule |
+|-------|------|
+| `type` | `@NotBlank` — must not be null or empty |
+| `payload` | `@NotNull` — must be valid JSON object |
 
 ## Sprint Progress
 
 | Sprint | Goal | Status |
 |--------|------|--------|
 | 1 | Project Foundation | ✅ Done |
-| 2 | Event Entity & Basic CRUD API | ✅ Done |
-| 3 | GET /events/{id} & Error Handling | 🔄 Upcoming |
-| 4 | Input Validation | 🔄 Upcoming |
-| 5 | Event Search | 🔄 Upcoming |
+| 2 | Event CRUD API, validation, error handling, logging | ✅ Done |
+| 3 | Advanced search & filtering | 🔄 Upcoming |
+| 4 | Security (Auth/Authorization) | 🔄 Upcoming |
+| 5 | Audit Logging | 🔄 Upcoming |
 | 6 | Advanced Filtering & Pagination | 🔄 Upcoming |
-| 7 | Security (Auth/Authorization) | 🔄 Upcoming |
-| 8 | Audit Logging | 🔄 Upcoming |
-| 9 | Performance Optimization | 🔄 Upcoming |
-| 10 | Integration Testing | 🔄 Upcoming |
-| 11 | API Documentation (Swagger) | 🔄 Upcoming |
-| 12 | Deployment & Production Readiness | 🔄 Upcoming |
+| 7 | Performance Optimization | 🔄 Upcoming |
+| 8 | Integration Testing | 🔄 Upcoming |
+| 9 | API Documentation (Swagger) | 🔄 Upcoming |
+| 10 | Deployment & Production Readiness | 🔄 Upcoming |
 
 ---
 
