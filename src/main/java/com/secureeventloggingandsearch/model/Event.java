@@ -9,7 +9,11 @@ import java.time.Instant;
 import java.util.UUID;
 
 @Entity
-@Table(name = "events")
+@Table(name = "events", indexes = {
+        @Index(name = "idx_events_type", columnList = "type"),
+        @Index(name = "idx_events_timestamp", columnList = "timestamp"),
+        @Index(name = "idx_events_type_timestamp", columnList = "type, timestamp")
+})
 public class Event {
 
     @Id

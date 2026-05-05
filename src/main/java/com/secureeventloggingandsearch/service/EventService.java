@@ -2,6 +2,7 @@ package com.secureeventloggingandsearch.service;
 
 import com.secureeventloggingandsearch.dto.EventRequest;
 import com.secureeventloggingandsearch.dto.EventResponse;
+import com.secureeventloggingandsearch.dto.PagedResponse;
 import com.secureeventloggingandsearch.exception.EventNotFoundException;
 import com.secureeventloggingandsearch.model.Event;
 import com.secureeventloggingandsearch.repository.EventRepository;
@@ -28,7 +29,7 @@ public class EventService {
     public EventResponse createEvent(EventRequest request) {
         log.info("Creating event of type: {}", request.getType());
         Event event = new Event(
-                request.getType(),
+                request.getType().toUpperCase(),
                 request.getTimestamp() != null ? request.getTimestamp() : Instant.now(),
                 request.getPayload()
         );
@@ -37,10 +38,13 @@ public class EventService {
         return toResponse(saved);
     }
 
-    public Page<EventResponse> getAllEvents(Pageable pageable) {
-        log.info("Fetching events - page: {}, size: {}", pageable.getPageNumber(), pageable.getPageSize());
-        return eventRepository.findAll(pageable)
+    public PagedResponse<EventResponse> getAllEvents(String type, Instant from, Instant to, Pageable pageable) {
+        log.info("Fetching events - page: {}, size: {}, type: {}, from: {}, to: {}",
+                pageable.getPageNumber(), pageable.getPageSize(), type, from, to);
+        String normalisedType = type != null ? type.toUpperCase() : null;
+        Page<EventResponse> page = eventRepository.findByFilters(normalisedType, from, to, pageable)
                 .map(this::toResponse);
+        return new PagedResponse<>(page);
     }
 
     public EventResponse getEventById(UUID id) {
