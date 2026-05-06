@@ -49,6 +49,9 @@ public class EventService {
 
     public EventResponse getEventById(UUID id) {
         log.info("Fetching event with id: {}", id);
+        if (id == null) {
+            throw new IllegalArgumentException("Event id must not be null");
+        }
         Event event = eventRepository.findById(id)
                 .orElseThrow(() -> {
                     log.warn("Event not found with id: {}", id);

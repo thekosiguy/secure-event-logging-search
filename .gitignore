@@ -38,3 +38,9 @@ target/
 
 ### AI Prompts ###
 ai/copilot/prompts/
+
+### Environment Variables ###
+.env
+
+### Maven Wrapper Binary ###
+.mvn/wrapper/maven-wrapper.jar

@@ -5,7 +5,6 @@ import com.secureeventloggingandsearch.dto.EventResponse;
 import com.secureeventloggingandsearch.dto.PagedResponse;
 import com.secureeventloggingandsearch.service.EventService;
 import jakarta.validation.Valid;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;

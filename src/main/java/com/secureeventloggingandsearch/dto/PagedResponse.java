@@ -1,7 +1,6 @@
 package com.secureeventloggingandsearch.dto;
 
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Sort;
 
 import java.util.List;
 import java.util.stream.Collectors;
