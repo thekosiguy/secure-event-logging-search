@@ -10,6 +10,7 @@ A secure event logging and search platform built with Java and Spring Boot. Enab
 - **ORM**: Hibernate (JPA) with hypersistence-utils for jsonb support
 - **Build Tool**: Maven 3.9.x
 - **Containerisation**: Docker + Docker Compose
+- **Cloud**: AWS (ECS Fargate, ECR, RDS PostgreSQL, CloudWatch)
 - **IDE**: Kiro
 
 ## Project Structure
@@ -40,6 +41,8 @@ A secure event logging and search platform built with Java and Spring Boot. Enab
 │           └── application.properties
 ├── Dockerfile                                  # Multi-stage build
 ├── docker-compose.yml                          # App + DB orchestration
+├── ecs-task-definition.json                    # AWS ECS Fargate task definition
+├── ecs-trust-policy.json                       # IAM trust policy for ECS
 ├── .env.example                                # Environment variable template
 ├── mvnw / mvnw.cmd                             # Maven wrapper
 └── pom.xml
@@ -92,6 +95,25 @@ CREATE DATABASE eventdb;
 ### Run
 ```bash
 mvn spring-boot:run
+```
+
+## AWS Fargate Deployment
+
+The app is deployed on AWS ECS Fargate with RDS PostgreSQL.
+
+### Architecture
+- **ECR**: Docker image registry
+- **ECS Fargate**: Serverless container orchestration
+- **RDS PostgreSQL**: Managed database (db.t3.micro)
+- **CloudWatch**: Centralised logging
+
+### Deploy a New Version
+```bash
+docker build -t secure-event-logging .
+docker tag secure-event-logging:latest <account-id>.dkr.ecr.eu-west-2.amazonaws.com/secure-event-logging:latest
+aws ecr get-login-password --region eu-west-2 | docker login --username AWS --password-stdin <account-id>.dkr.ecr.eu-west-2.amazonaws.com
+docker push <account-id>.dkr.ecr.eu-west-2.amazonaws.com/secure-event-logging:latest
+aws ecs update-service --cluster secure-event-logging-cluster --service secure-event-logging-service --force-new-deployment --region eu-west-2
 ```
 
 ## API Endpoints
@@ -194,13 +216,13 @@ Response `200 OK`:
 | 2 | Event CRUD API, validation, error handling, logging | ✅ Done |
 | 3 | Pagination, filtering, sorting, query efficiency | ✅ Done |
 | 4 | Dockerisation | ✅ Done |
-| 5 | Security (Auth/Authorization) | 🔄 Upcoming |
-| 6 | Audit Logging | 🔄 Upcoming |
-| 7 | Performance Optimization | 🔄 Upcoming |
-| 8 | Integration Testing | 🔄 Upcoming |
-| 9 | API Documentation (Swagger) | 🔄 Upcoming |
-| 10 | Deployment & Production Readiness | 🔄 Upcoming |
+| 5 | AWS Fargate Deployment | ✅ Done |
+| 6 | Security (Auth/Authorization) | 🔄 Upcoming |
+| 7 | Audit Logging | 🔄 Upcoming |
+| 8 | Performance Optimization | 🔄 Upcoming |
+| 9 | Integration Testing | 🔄 Upcoming |
+| 10 | API Documentation (Swagger) | 🔄 Upcoming |
 
 ---
 
-**Version**: 0.4.0 | **Last Updated**: May 5, 2026
+**Version**: 0.5.0 | **Last Updated**: May 7, 2026

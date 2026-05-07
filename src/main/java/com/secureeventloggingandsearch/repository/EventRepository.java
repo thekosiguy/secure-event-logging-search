@@ -14,13 +14,18 @@ import java.util.UUID;
 @Repository
 public interface EventRepository extends JpaRepository<Event, UUID> {
 
-    @Query("SELECT e FROM Event e WHERE " +
+    @Query(value = "SELECT * FROM events e WHERE " +
            "(:type IS NULL OR e.type = :type) AND " +
-           "(:from IS NULL OR e.timestamp >= :from) AND " +
-           "(:to IS NULL OR e.timestamp <= :to)")
+           "(CAST(:fromTs AS TIMESTAMP) IS NULL OR e.timestamp >= CAST(:fromTs AS TIMESTAMP)) AND " +
+           "(CAST(:toTs AS TIMESTAMP) IS NULL OR e.timestamp <= CAST(:toTs AS TIMESTAMP))",
+           countQuery = "SELECT COUNT(*) FROM events e WHERE " +
+           "(:type IS NULL OR e.type = :type) AND " +
+           "(CAST(:fromTs AS TIMESTAMP) IS NULL OR e.timestamp >= CAST(:fromTs AS TIMESTAMP)) AND " +
+           "(CAST(:toTs AS TIMESTAMP) IS NULL OR e.timestamp <= CAST(:toTs AS TIMESTAMP))",
+           nativeQuery = true)
     Page<Event> findByFilters(
             @Param("type") String type,
-            @Param("from") Instant from,
-            @Param("to") Instant to,
+            @Param("fromTs") Instant from,
+            @Param("toTs") Instant to,
             Pageable pageable);
 }

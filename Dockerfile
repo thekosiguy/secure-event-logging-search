@@ -23,6 +23,9 @@ WORKDIR /app
 # Create a non-root user for security
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 
+# Install curl for health checks
+RUN apk add --no-cache curl
+
 # Copy only the built jar from the builder stage
 COPY --from=builder /app/target/secure-event-logging-*.jar app.jar
 

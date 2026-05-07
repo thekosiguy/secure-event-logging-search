@@ -1,0 +1,48 @@
+{
+  "family": "secure-event-logging",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "512",
+  "memory": "1024",
+  "executionRoleArn": "arn:aws:iam::572613306783:role/ecsTaskExecutionRole",
+  "taskRoleArn": "arn:aws:iam::572613306783:role/ecsTaskExecutionRole",
+  "containerDefinitions": [
+    {
+      "name": "secure-event-logging",
+      "image": "572613306783.dkr.ecr.eu-west-2.amazonaws.com/secure-event-logging:latest",
+      "essential": true,
+      "portMappings": [
+        {
+          "containerPort": 8080,
+          "hostPort": 8080,
+          "protocol": "tcp"
+        }
+      ],
+      "environment": [
+        { "name": "DB_HOST",     "value": "secure-event-logging-db.c320moyag1pu.eu-west-2.rds.amazonaws.com" },
+        { "name": "DB_PORT",     "value": "5432" },
+        { "name": "DB_NAME",     "value": "eventdb" },
+        { "name": "DB_USERNAME", "value": "postgres" },
+        { "name": "DB_PASSWORD", "value": "postgres" }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/secure-event-logging",
+          "awslogs-region": "eu-west-2",
+          "awslogs-stream-prefix": "ecs"
+        }
+      },
+      "healthCheck": {
+        "command": [
+          "CMD-SHELL",
+          "curl -f http://localhost:8080/api/v1/health || exit 1"
+        ],
+        "interval": 30,
+        "timeout": 5,
+        "retries": 3,
+        "startPeriod": 60
+      }
+    }
+  ]
+}
