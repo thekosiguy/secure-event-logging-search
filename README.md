@@ -43,6 +43,7 @@ A secure event logging and search platform built with Java and Spring Boot. Enab
 ├── docker-compose.yml                          # App + DB orchestration
 ├── ecs-task-definition.json                    # AWS ECS Fargate task definition
 ├── ecs-trust-policy.json                       # IAM trust policy for ECS
+├── ecs-execution-policy.json                   # Scoped IAM execution policy
 ├── .env.example                                # Environment variable template
 ├── mvnw / mvnw.cmd                             # Maven wrapper
 └── pom.xml
@@ -106,6 +107,16 @@ The app is deployed on AWS ECS Fargate with RDS PostgreSQL.
 - **ECS Fargate**: Serverless container orchestration
 - **RDS PostgreSQL**: Managed database (db.t3.micro)
 - **CloudWatch**: Centralised logging
+- **IAM**: Least-privilege execution and task roles
+
+### Security
+| Component | Configuration |
+|-----------|--------------|
+| ECS Security Group | Inbound TCP 8080 from `0.0.0.0/0` |
+| RDS Security Group | Inbound TCP 5432 from VPC CIDR only |
+| Task Execution Role | Scoped to ECR pull + CloudWatch `/ecs/secure-event-logging` only |
+| Task Role | Same as execution role (expandable for S3, etc.) |
+| Network | `awsvpc` mode — each task gets its own ENI within the VPC |
 
 ### Deploy a New Version
 ```bash
