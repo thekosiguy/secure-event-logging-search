@@ -44,3 +44,6 @@ ai/copilot/prompts/
 
 ### Maven Wrapper Binary ###
 .mvn/wrapper/maven-wrapper.jar
+
+### Project Specification ###
+PROJECT_SPECIFICATION.md
