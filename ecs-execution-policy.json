@@ -19,6 +19,28 @@
         "logs:PutLogEvents"
       ],
       "Resource": "arn:aws:logs:eu-west-2:572613306783:log-group:/ecs/secure-event-logging:*"
+    },
+    {
+      "Sid": "SSMParameterAccess",
+      "Effect": "Allow",
+      "Action": [
+        "ssm:GetParameters",
+        "ssm:GetParameter"
+      ],
+      "Resource": "arn:aws:ssm:eu-west-2:572613306783:parameter/ecs/secure-event-logging/*"
+    },
+    {
+      "Sid": "KMSDecrypt",
+      "Effect": "Allow",
+      "Action": [
+        "kms:Decrypt"
+      ],
+      "Resource": "*",
+      "Condition": {
+        "StringEquals": {
+          "kms:ViaService": "ssm.eu-west-2.amazonaws.com"
+        }
+      }
     }
   ]
 }

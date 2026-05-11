@@ -8,7 +8,9 @@ A secure event logging and search platform built with Java and Spring Boot. Enab
 - **Language**: Java 17+ (tested on JDK 25)
 - **Database**: PostgreSQL 17
 - **ORM**: Hibernate (JPA) with hypersistence-utils for jsonb support
+- **Security**: Spring Security + JWT (HMAC-SHA, stateless)
 - **Build Tool**: Maven 3.9.x
+- **Testing**: JUnit 5 + Mockito + jqwik (property-based testing)
 - **Containerisation**: Docker + Docker Compose
 - **Cloud**: AWS (ECS Fargate, ECR, RDS PostgreSQL, CloudWatch)
 - **IDE**: Kiro
@@ -21,22 +23,37 @@ A secure event logging and search platform built with Java and Spring Boot. Enab
 │       ├── java/com/secureeventloggingandsearch/
 │       │   ├── SecureEventLoggingApplication.java
 │       │   ├── controller/
+│       │   │   ├── AuthController.java         # Register + login endpoints
 │       │   │   ├── EventController.java        # Event CRUD + filtering endpoints
 │       │   │   └── HealthController.java       # Health check endpoint
 │       │   ├── service/
+│       │   │   ├── AuthService.java            # Registration, login, token issuance
 │       │   │   └── EventService.java           # Business logic + SLF4J logging
 │       │   ├── repository/
-│       │   │   └── EventRepository.java        # JPA queries with filter support
+│       │   │   ├── EventRepository.java        # JPA queries with filter support
+│       │   │   └── UserRepository.java         # User lookup by username
 │       │   ├── model/
-│       │   │   └── Event.java                  # JPA entity with DB indexes
+│       │   │   ├── Event.java                  # JPA entity with DB indexes
+│       │   │   ├── Role.java                   # Enum: ROLE_ADMIN, ROLE_USER
+│       │   │   └── User.java                   # JPA entity for users table
 │       │   ├── dto/
+│       │   │   ├── AuthResponse.java           # Login response (token)
 │       │   │   ├── EventRequest.java           # POST request body
 │       │   │   ├── EventResponse.java          # Single event response
+│       │   │   ├── ErrorResponse.java          # Structured error response
+│       │   │   ├── LoginRequest.java           # Login request body
 │       │   │   ├── PagedResponse.java          # Paginated response wrapper
-│       │   │   └── ErrorResponse.java          # Structured error response
-│       │   └── exception/
-│       │       ├── GlobalExceptionHandler.java # Handles all exceptions globally
-│       │       └── EventNotFoundException.java # 404 for missing events
+│       │   │   ├── RegisterRequest.java        # Registration request body
+│       │   │   └── RegisterResponse.java       # Registration response
+│       │   ├── exception/
+│       │   │   ├── GlobalExceptionHandler.java # Handles all exceptions globally
+│       │   │   └── EventNotFoundException.java # 404 for missing events
+│       │   └── security/
+│       │       ├── AccessDeniedHandlerImpl.java # 403 JSON response handler
+│       │       ├── AuthEntryPoint.java          # 401 JSON response handler
+│       │       ├── JwtAuthenticationFilter.java # Extracts + validates JWT per request
+│       │       ├── JwtProvider.java             # Token generation + validation
+│       │       └── SecurityConfig.java          # Filter chain, RBAC rules, BCrypt
 │       └── resources/
 │           └── application.properties
 ├── Dockerfile                                  # Multi-stage build
@@ -87,6 +104,8 @@ Set these via `sysdm.cpl` → Advanced → Environment Variables:
 |----------|-------------|
 | `DB_USERNAME` | PostgreSQL username (e.g. `postgres`) |
 | `DB_PASSWORD` | PostgreSQL password |
+| `JWT_SECRET` | JWT signing key (min 32 bytes). Defaults to dev key if unset |
+| `JWT_EXPIRATION_MS` | Token expiration in ms (default: 86400000 = 24h) |
 
 ### Database Setup
 ```sql
@@ -129,14 +148,21 @@ aws ecs update-service --cluster secure-event-logging-cluster --service secure-e
 
 ## API Endpoints
 
-### Active
+### Public (No Authentication Required)
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | GET | `/api/v1/health` | Health check |
-| POST | `/api/v1/events` | Create a new event |
-| GET | `/api/v1/events` | Retrieve events (paginated, filtered, sorted) |
-| GET | `/api/v1/events/{id}` | Retrieve event by ID |
+| POST | `/api/v1/auth/register` | Register a new user |
+| POST | `/api/v1/auth/login` | Authenticate and receive JWT |
+
+### Protected (JWT Required)
+
+| Method | Endpoint | Roles | Description |
+|--------|----------|-------|-------------|
+| POST | `/api/v1/events` | ADMIN | Create a new event |
+| GET | `/api/v1/events` | ADMIN, USER | Retrieve events (paginated, filtered, sorted) |
+| GET | `/api/v1/events/{id}` | ADMIN, USER | Retrieve event by ID |
 
 ### Query Parameters — GET /api/v1/events
 
@@ -159,10 +185,41 @@ GET /api/v1/events?type=LOGIN&page=0&size=10&sort=timestamp,desc
 
 ### Request & Response Examples
 
-**POST /api/v1/events**
+**POST /api/v1/auth/register**
+```bash
+curl -X POST http://localhost:8080/api/v1/auth/register \
+  -H "Content-Type: application/json" \
+  -d "{\"username\":\"admin\",\"password\":\"securepass123\",\"role\":\"ROLE_ADMIN\"}"
+```
+
+Response `201 Created`:
+```json
+{
+  "username": "admin",
+  "role": "ROLE_ADMIN"
+}
+```
+
+**POST /api/v1/auth/login**
+```bash
+curl -X POST http://localhost:8080/api/v1/auth/login \
+  -H "Content-Type: application/json" \
+  -d "{\"username\":\"admin\",\"password\":\"securepass123\"}"
+```
+
+Response `200 OK`:
+```json
+{
+  "token": "eyJhbGciOiJIUzM4NCJ9...",
+  "type": "Bearer"
+}
+```
+
+**POST /api/v1/events** (authenticated)
 ```bash
 curl -X POST http://localhost:8080/api/v1/events \
   -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <token>" \
   -d "{\"type\":\"LOGIN\",\"payload\":{\"user\":\"john\",\"ip\":\"192.168.1.1\"}}"
 ```
 
@@ -219,6 +276,54 @@ Response `200 OK`:
 | `idx_events_timestamp` | `timestamp` | Fast filter and sort by timestamp |
 | `idx_events_type_timestamp` | `type, timestamp` | Optimised combined filter queries |
 
+## Security
+
+### Authentication & Authorization
+
+The platform follows **Zero Trust** principles — every request to a protected endpoint must carry a valid JWT token.
+
+| Aspect | Implementation |
+|--------|---------------|
+| Authentication | JWT Bearer tokens via `Authorization` header |
+| Password storage | BCrypt hashing |
+| Token signing | HMAC-SHA with configurable secret |
+| Token expiration | Configurable (default 24 hours) |
+| Session management | Stateless (no server-side sessions) |
+| CSRF | Disabled (stateless REST API) |
+| Role-based access | ADMIN can write events; ADMIN + USER can read |
+| Error responses | Structured JSON for 401/403 with timestamp |
+
+### Roles
+
+| Role | Permissions |
+|------|-------------|
+| `ROLE_ADMIN` | Read + write events |
+| `ROLE_USER` | Read events only |
+
+## Testing
+
+58 tests across unit tests and property-based tests:
+
+```bash
+# Run all tests
+mvnw.cmd test
+
+# Run only property tests
+mvnw.cmd test -Dtest="*PropertyTest"
+```
+
+| Test Class | Type | Count | Coverage |
+|------------|------|-------|----------|
+| AuthControllerTest | Unit | 9 | Registration, login, validation |
+| EventControllerTest | Unit | 8 | Event CRUD with @WithMockUser |
+| SecurityConfigTest | Integration | 9 | RBAC, public endpoints, 401/403 |
+| JwtProviderTest | Unit | 10 | Token lifecycle, expiry, tampering |
+| JwtProviderPropertyTest | Property | 4 | Token round-trip, invalid rejection |
+| JwtAuthenticationFilterPropertyTest | Property | 2 | SecurityContext population |
+| PasswordHashingPropertyTest | Property | 3 | BCrypt round-trip |
+| AuthServicePropertyTest | Property | 4 | Registration/login correctness |
+| EventServiceTest | Unit | 9 | Service layer logic |
+
 ## Sprint Progress
 
 | Sprint | Goal | Status |
@@ -228,7 +333,7 @@ Response `200 OK`:
 | 3 | Pagination, filtering, sorting, query efficiency | ✅ Done |
 | 4 | Dockerisation | ✅ Done |
 | 5 | AWS Fargate Deployment | ✅ Done |
-| 6 | Security (Auth/Authorization) | 🔄 Upcoming |
+| 6 | Security (Auth/Authorization) | ✅ Done |
 | 7 | Audit Logging | 🔄 Upcoming |
 | 8 | Performance Optimization | 🔄 Upcoming |
 | 9 | Integration Testing | 🔄 Upcoming |
@@ -236,4 +341,4 @@ Response `200 OK`:
 
 ---
 
-**Version**: 0.5.0 | **Last Updated**: May 7, 2026
+**Version**: 0.6.0 | **Last Updated**: May 11, 2026

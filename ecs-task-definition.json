@@ -5,7 +5,7 @@
   "cpu": "512",
   "memory": "1024",
   "executionRoleArn": "arn:aws:iam::572613306783:role/ecsTaskExecutionRole",
-  "taskRoleArn": "arn:aws:iam::572613306783:role/ecsTaskExecutionRole",
+  "taskRoleArn": "arn:aws:iam::572613306783:role/ecsSecureEventLoggingTaskRole",
   "containerDefinitions": [
     {
       "name": "secure-event-logging",
@@ -21,9 +21,17 @@
       "environment": [
         { "name": "DB_HOST",     "value": "secure-event-logging-db.c320moyag1pu.eu-west-2.rds.amazonaws.com" },
         { "name": "DB_PORT",     "value": "5432" },
-        { "name": "DB_NAME",     "value": "eventdb" },
-        { "name": "DB_USERNAME", "value": "postgres" },
-        { "name": "DB_PASSWORD", "value": "postgres" }
+        { "name": "DB_NAME",     "value": "eventdb" }
+      ],
+      "secrets": [
+        {
+          "name": "DB_USERNAME",
+          "valueFrom": "arn:aws:ssm:eu-west-2:572613306783:parameter/ecs/secure-event-logging/db-username"
+        },
+        {
+          "name": "DB_PASSWORD",
+          "valueFrom": "arn:aws:ssm:eu-west-2:572613306783:parameter/ecs/secure-event-logging/db-password"
+        }
       ],
       "logConfiguration": {
         "logDriver": "awslogs",
