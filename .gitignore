@@ -50,5 +50,8 @@ ai/copilot/prompts/
 ### Maven Wrapper Binary ###
 .mvn/wrapper/maven-wrapper.jar
 
+### jqwik test database (local cache) ###
+.jqwik-database
+
 ### Project Specification ###
 PROJECT_SPECIFICATION.md
