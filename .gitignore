@@ -42,6 +42,11 @@ ai/copilot/prompts/
 ### Environment Variables ###
 .env
 
+### Kiro IDE Config (keep .kiro/specs/ for design docs) ###
+.kiro/settings/
+.kiro/steering/
+.kiro/skills/
+
 ### Maven Wrapper Binary ###
 .mvn/wrapper/maven-wrapper.jar
 
